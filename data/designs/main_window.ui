@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>600</height>
+    <height>640</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,16 +17,6 @@
    <string>Обновить</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QTableView" name="game_table">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>210</y>
-      <width>751</width>
-      <height>341</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QLineEdit" name="search_name">
     <property name="geometry">
      <rect>
@@ -43,8 +33,8 @@
    <widget class="QPushButton" name="add_btn">
     <property name="geometry">
      <rect>
-      <x>240</x>
-      <y>170</y>
+      <x>660</x>
+      <y>550</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -61,8 +51,8 @@
    <widget class="QPushButton" name="edit_btn">
     <property name="geometry">
      <rect>
-      <x>370</x>
-      <y>170</y>
+      <x>660</x>
+      <y>510</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -79,8 +69,8 @@
    <widget class="QPushButton" name="delete_btn">
     <property name="geometry">
      <rect>
-      <x>500</x>
-      <y>170</y>
+      <x>660</x>
+      <y>470</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -97,8 +87,8 @@
    <widget class="QPushButton" name="view_btn">
     <property name="geometry">
      <rect>
-      <x>650</x>
-      <y>170</y>
+      <x>660</x>
+      <y>380</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -110,24 +100,6 @@
     </property>
     <property name="text">
      <string>Просмотр</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="update_btn">
-    <property name="geometry">
-     <rect>
-      <x>720</x>
-      <y>20</y>
-      <width>51</width>
-      <height>51</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>24</pointsize>
-     </font>
-    </property>
-    <property name="text">
-     <string>🗘</string>
     </property>
    </widget>
    <widget class="QPushButton" name="search_btn">
@@ -173,18 +145,18 @@
      </rect>
     </property>
    </widget>
-   <widget class="QLabel" name="label">
+   <widget class="QLabel" name="title_label">
     <property name="geometry">
      <rect>
       <x>20</x>
       <y>10</y>
-      <width>391</width>
+      <width>521</width>
       <height>61</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <family>Franklin Gothic Medium Cond</family>
+      <family>MS Shell Dlg 2</family>
       <pointsize>36</pointsize>
       <weight>75</weight>
       <bold>true</bold>
@@ -192,6 +164,61 @@
     </property>
     <property name="text">
      <string>Игровая библиотека</string>
+    </property>
+   </widget>
+   <widget class="QTableWidget" name="games_table">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>210</y>
+      <width>581</width>
+      <height>381</height>
+     </rect>
+    </property>
+    <row>
+     <property name="text">
+      <string>1</string>
+     </property>
+    </row>
+    <column>
+     <property name="text">
+      <string>Название</string>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Автор</string>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Жанр</string>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Год создания</string>
+     </property>
+    </column>
+   </widget>
+   <widget class="QLabel" name="info_label">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>169</y>
+      <width>411</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>14</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Игр найдено: 10</string>
     </property>
    </widget>
   </widget>
