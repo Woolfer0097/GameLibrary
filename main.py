@@ -220,7 +220,7 @@ class GameAddWidget(QWidget):
             sql_request = "INSERT INTO games(id,game_name,author,genre_id," \
                           "year,game_description,image_link) VALUES(" + \
                           f"{self.id},'{self.game_name}','{self.author}'," \
-                          f"{self.genre_id},{self.year},'{self.description}'," \
+                          f"{self.genre_id},{int(self.year)},'{self.description}'," \
                           f"'{self.image_link}')"
             self.cursor.execute(sql_request)
             self.connection.commit()
@@ -237,20 +237,24 @@ class GameAddWidget(QWidget):
                       f"'{self.genres_box.currentText()}'"
         self.genre_id = str(*([str(*i) for i in self.cursor.execute(sql_request)]))
         self.game_name = self.line_name.text()
-        self.year = int(self.line_year.text())
+        self.year = self.line_year.text()
         self.description = self.description_plain.toPlainText()
 
     # Функция, проверяющая введённые данные
     def check(self):
         self.data_get()
-        if not self.author:
-            QMessageBox.critical(self, "Ошибка ", "Введите автора", QMessageBox.Ok)
-            self.checked = False
-        elif not self.game_name:
-            QMessageBox.critical(self, "Ошибка ", "У игры должно быть название",
+        if not self.game_name:
+            QMessageBox.critical(self, "Ошибка ", "Введите название игры",
                                  QMessageBox.Ok)
             self.checked = False
-        elif 1952 > int(self.year) > datetime.year:
+        elif not self.author:
+            QMessageBox.critical(self, "Ошибка ", "Введите автора игры", QMessageBox.Ok)
+            self.checked = False
+        elif not self.year:
+            QMessageBox.critical(self, "Ошибка ", "Введите год создания игры",
+                                 QMessageBox.Ok)
+            self.checked = False
+        elif int(self.year) > datetime.year or int(self.year) < 1952:
             QMessageBox.critical(self, "Ошибка ", f"Игры не могли быть созданы в "
                                                   f"{self.year} году",
                                  QMessageBox.Ok)
@@ -268,28 +272,29 @@ class GameAddWidget(QWidget):
 
     # Загружаем изображение
     def load_image(self):
-        self.image_link = QFileDialog.getOpenFileName(self, 'Выбрать картинку', '',
-                                                      'Картинка (*.jpg)')[0]
-        if self.image_link:
-            self.check_image.setCheckState(1)
-        else:
-            self.check_image.setCheckState(0)
-        self.set_image()
-        self.copy_image_to_project()
+        self.check()
+        if self.checked:
+            self.image_link = QFileDialog.getOpenFileName(self, 'Выбрать картинку', '',
+                                                          'Картинка (*.jpg)')[0]
+            if self.image_link:
+                self.check_image.setCheckState(1)
+            else:
+                self.check_image.setCheckState(0)
+            self.set_image()
+            self.copy_image_to_project()
 
     # Функция, копирующая изображение в папку проекта
     def copy_image_to_project(self):
         files = [file for file in listdir(IMAGES_PATH) if isfile(join(IMAGES_PATH, file))]
-        self.image_link = self.image_link.split("/")[-1]
+        self.image_link = str(self.game_name) + "." + self.image_link.split(".")[-1]
         # Проверка на наличие такого же файла в папке
-        if self.image_link in files:
+        if self.image_link.lower() in files:
             splitted_link = self.image_link.split(".")
             self.image_link = splitted_link[0] + \
                               f"-{datetime.day}-{datetime.month}-{datetime.year}-" \
                               f"{datetime.hour}-{datetime.minute}-{datetime.second}" \
                               + f".{splitted_link[1]}"
-        self.image_link = f"./data/images/{self.image_link}"
-        print(self.image_link)
+        self.image_link = f"./data/images/{self.image_link}".lower()
         self.image_label.pixmap().save(self.image_link)
 
     # Устанавливаем изображение на image_label
