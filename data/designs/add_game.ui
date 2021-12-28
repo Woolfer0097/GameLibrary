@@ -7,17 +7,17 @@
     <x>0</x>
     <y>0</y>
     <width>550</width>
-    <height>500</height>
+    <height>510</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QCheckBox" name="check_download">
+  <widget class="QCheckBox" name="check_image">
    <property name="geometry">
     <rect>
      <x>340</x>
-     <y>430</y>
+     <y>438</y>
      <width>81</width>
      <height>21</height>
     </rect>
@@ -26,11 +26,11 @@
     <string>Загружено</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="add_file_btn">
+  <widget class="QPushButton" name="add_image_btn">
    <property name="geometry">
     <rect>
      <x>430</x>
-     <y>430</y>
+     <y>438</y>
      <width>111</width>
      <height>21</height>
     </rect>
@@ -43,9 +43,9 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>90</y>
+     <y>60</y>
      <width>321</width>
-     <height>401</height>
+     <height>441</height>
     </rect>
    </property>
    <property name="placeholderText">
@@ -56,7 +56,7 @@
    <property name="geometry">
     <rect>
      <x>340</x>
-     <y>110</y>
+     <y>80</y>
      <width>201</width>
      <height>20</height>
     </rect>
@@ -69,7 +69,7 @@
    <property name="geometry">
     <rect>
      <x>340</x>
-     <y>150</y>
+     <y>120</y>
      <width>201</width>
      <height>20</height>
     </rect>
@@ -82,7 +82,7 @@
    <property name="geometry">
     <rect>
      <x>340</x>
-     <y>220</y>
+     <y>230</y>
      <width>200</width>
      <height>200</height>
     </rect>
@@ -95,7 +95,7 @@
    <property name="geometry">
     <rect>
      <x>340</x>
-     <y>90</y>
+     <y>60</y>
      <width>51</width>
      <height>16</height>
     </rect>
@@ -108,7 +108,7 @@
    <property name="geometry">
     <rect>
      <x>340</x>
-     <y>130</y>
+     <y>100</y>
      <width>51</width>
      <height>16</height>
     </rect>
@@ -121,7 +121,7 @@
    <property name="geometry">
     <rect>
      <x>140</x>
-     <y>70</y>
+     <y>40</y>
      <width>51</width>
      <height>16</height>
     </rect>
@@ -130,11 +130,11 @@
     <string>Описание</string>
    </property>
   </widget>
-  <widget class="QComboBox" name="genre_box">
+  <widget class="QComboBox" name="genres_box">
    <property name="geometry">
     <rect>
      <x>340</x>
-     <y>190</y>
+     <y>200</y>
      <width>201</width>
      <height>22</height>
     </rect>
@@ -144,7 +144,7 @@
    <property name="geometry">
     <rect>
      <x>340</x>
-     <y>170</y>
+     <y>180</y>
      <width>51</width>
      <height>16</height>
     </rect>
@@ -157,7 +157,7 @@
    <property name="geometry">
     <rect>
      <x>160</x>
-     <y>20</y>
+     <y>0</y>
      <width>231</width>
      <height>31</height>
     </rect>
@@ -173,11 +173,11 @@
     <string>Добавление данных</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="add_btn">
+  <widget class="QPushButton" name="commit_btn">
    <property name="geometry">
     <rect>
      <x>340</x>
-     <y>462</y>
+     <y>470</y>
      <width>201</width>
      <height>31</height>
     </rect>
@@ -191,6 +191,32 @@
    </property>
    <property name="text">
     <string>Добавить</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_6">
+   <property name="geometry">
+    <rect>
+     <x>340</x>
+     <y>140</y>
+     <width>51</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Год</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="line_year">
+   <property name="geometry">
+    <rect>
+     <x>340</x>
+     <y>160</y>
+     <width>201</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="placeholderText">
+    <string>Введите год создания игры...</string>
    </property>
   </widget>
  </widget>
