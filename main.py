@@ -147,7 +147,8 @@ class MainWindow(QMainWindow):
     def delete_image(self):
         sql_request = f"SELECT image_link FROM games WHERE id = {self.id}"
         image_link = str(*[str(*i) for i in self.cursor.execute(sql_request)])
-        remove(image_link)
+        if image_link.split(".")[-1] and image_link != "./data/images/default_image.jpg":
+            remove(image_link)
 
     def view_info(self):
         if self.games_table.selectedItems():
@@ -305,9 +306,6 @@ class GameAddWidget(QWidget):
 
     # Функция, сообщающая о закрытии окна и проверяющая раннюю загрузку изображения
     def closeEvent(self, event):
-        # Если закрыто нажатием на крестик - просто закрывать окно (Исключение)
-        if Qt.WA_QuitOnClose:
-            return
         if self.check_image.checkState() == 0:
             warning_box = QMessageBox().warning(self, "Предупреждение",
                                                 "Вы не загрузили изображение",
