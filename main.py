@@ -24,8 +24,10 @@ except ImportError as e:
     print(f"Ошибка: {e}")
     sys.exit()
 
+# Константы
 DEFAULT_IMAGE_SIZE = [200, 200]
 IMAGES_PATH = "./data/images"
+
 datetime = datetime.now()
 
 
@@ -61,7 +63,7 @@ class MainWindow(QMainWindow):
         self.add_btn.clicked.connect(self.add_widget_show)  # при нажатии на кнопку добавления информации об игре
         self.edit_btn.clicked.connect(self.edit_widget_show)  # при нажатии на кнопку изменения информации об игре
         self.delete_btn.clicked.connect(self.delete_game)  # при нажатии на кнопку удаления информации об игре
-        self.view_btn.clicked.connect(self.view_info)  # при нажатии на кнопку просмотра информации об игре
+        self.view_btn.clicked.connect(self.info_widget_show)  # при нажатии на кнопку просмотра информации об игре
         self.search_btn.clicked.connect(self.search)  # при нажатии на кнопку поиска игр
         self.update_btn.clicked.connect(self.update_table)  # при нажатии на кнопку обновления
 
@@ -124,6 +126,17 @@ class MainWindow(QMainWindow):
         else:
             QMessageBox.critical(self, "Ошибка ", "Выберите элемент", QMessageBox.Ok)
 
+    def info_widget_show(self):
+        if self.games_table.selectedItems():
+            game_name, author = self.games_table.item(self.games_table.currentRow(), 0).text(), \
+                                self.games_table.item(self.games_table.currentRow(), 1).text()
+            sql_request = f"SELECT id FROM games WHERE game_name = '{game_name}' AND author = '{author}'"
+            game_id = str(*([str(*i) for i in self.cursor.execute(sql_request)]))
+            self.widget = GameInfoWidget(game_id)
+            self.widget.show()
+        else:
+            QMessageBox.critical(self, "Ошибка ", "Выберите элемент", QMessageBox.Ok)
+
     def delete_game(self):
         if self.games_table.selectedItems():
             warning = QMessageBox().warning(self, "Предупреждение",
@@ -149,13 +162,6 @@ class MainWindow(QMainWindow):
         image_link = str(*[str(*i) for i in self.cursor.execute(sql_request)])
         if image_link.split(".")[-1] and image_link != "./data/images/default_image.jpg":
             remove(image_link)
-
-    def view_info(self):
-        if self.games_table.selectedItems():
-            self.widget = GameInfoWidget()
-            self.widget.show()
-        else:
-            QMessageBox.critical(self, "Ошибка ", "Выберите элемент", QMessageBox.Ok)
 
     def search(self):
         genre = self.genres_box.currentText()
@@ -326,14 +332,59 @@ class GameEditWidget(QWidget):
 
 
 class GameInfoWidget(QWidget):
-    def __init__(self):
+    def __init__(self, game_id):
         super().__init__()
+        self.game_name = None
+        self.author = None
+        self.genre = None
+        self.year = None
+        self.description = None
+        self.image_link = None
+        self.id = game_id
+        # Первое подключение к БД
+        self.connection = sqlite3.connect("./data/games.db")
+        self.cursor = self.connection.cursor()
+        # Подключение дизайна
         uic.loadUi('./data/designs/description.ui', self)
         self.initUI()
 
     def initUI(self):  # Функция инициализации работы окна просмотра информации
         # Указываем заголовок окна
         self.setWindowTitle('Информация об игре')
+        self.get_data()
+        self.set_data()
+
+    # Функция, отвечающая за взятие данных из БД
+    def get_data(self):
+        sql_request = f"SELECT game_name FROM games WHERE id = {self.id}"
+        self.game_name = str(*([str(*i) for i in self.cursor.execute(sql_request)]))
+        sql_request = f"SELECT author FROM games WHERE id = {self.id}"
+        self.author = str(*([str(*i) for i in self.cursor.execute(sql_request)]))
+        sql_request = f"SELECT genres.title FROM games LEFT JOIN genres ON " \
+                      f"genres.id = games.genre_id WHERE games.id = " \
+                      f"{self.id}"
+        self.genre = str(*([str(*i) for i in self.cursor.execute(sql_request)]))
+        sql_request = f"SELECT year FROM games WHERE id = {self.id}"
+        self.year = str(*([str(*i) for i in self.cursor.execute(sql_request)]))
+        sql_request = f"SELECT game_description FROM games WHERE id = {self.id}"
+        self.description = str(*([str(*i) for i in self.cursor.execute(sql_request)]))
+        sql_request = f"SELECT image_link FROM games WHERE id = {self.id}"
+        self.image_link = str(*([str(*i) for i in self.cursor.execute(sql_request)]))
+
+    # Устанавливаем данные на соответствующие места
+    def set_data(self):
+        self.label_name.setText(self.game_name)
+        self.label_author.setText(self.author)
+        self.label_year.setText(self.year)
+        self.label_genre.setText(self.genre)
+        self.description_plain.setPlainText(self.description)
+        self.set_image()
+
+    # Устанавливаем изображение на image_label
+    def set_image(self):
+        image = QPixmap(self.image_link).scaled(QSize(*DEFAULT_IMAGE_SIZE))
+        self.image_label.setAlignment(Qt.AlignCenter)
+        self.image_label.setPixmap(image)
 
 
 if __name__ == '__main__':
