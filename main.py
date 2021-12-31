@@ -8,8 +8,7 @@ try:
     from pymorphy2 import MorphAnalyzer
     from PyQt5 import uic
     from PyQt5.QtCore import Qt, QSize
-    from PyQt5.QtGui import QPixmap, QFontDatabase
-    from PyQt5.QtPrintSupport import QPrintDialog, QPrinter
+    from PyQt5.QtGui import QPixmap
     from PyQt5.QtWidgets import QApplication, \
         QMainWindow, QWidget, \
         QMessageBox, QTableWidgetItem, \
@@ -121,21 +120,27 @@ class MainWindow(QMainWindow):
 
     def edit_widget_show(self):
         if self.games_table.selectedItems():
-            self.widget = GameEditWidget()
+            game_id = self.get_currentRow_id()
+            self.widget = GameEditWidget(game_id)
             self.widget.show()
         else:
             QMessageBox.critical(self, "Ошибка ", "Выберите элемент", QMessageBox.Ok)
 
     def info_widget_show(self):
         if self.games_table.selectedItems():
-            game_name, author = self.games_table.item(self.games_table.currentRow(), 0).text(), \
-                                self.games_table.item(self.games_table.currentRow(), 1).text()
-            sql_request = f"SELECT id FROM games WHERE game_name = '{game_name}' AND author = '{author}'"
-            game_id = str(*([str(*i) for i in self.cursor.execute(sql_request)]))
+            game_id = self.get_currentRow_id()
             self.widget = GameInfoWidget(game_id)
             self.widget.show()
+            self.update_connection()
         else:
             QMessageBox.critical(self, "Ошибка ", "Выберите элемент", QMessageBox.Ok)
+
+    def get_currentRow_id(self):
+        game_name, author = self.games_table.item(self.games_table.currentRow(), 0).text(), \
+                            self.games_table.item(self.games_table.currentRow(), 1).text()
+        sql_request = f"SELECT id FROM games WHERE game_name = '{game_name}' AND author = '{author}'"
+        game_id = str(*([str(*i) for i in self.cursor.execute(sql_request)]))
+        return game_id
 
     def delete_game(self):
         if self.games_table.selectedItems():
@@ -237,15 +242,17 @@ class GameAddWidget(QWidget):
     def data_get(self):
         sql_request = "SELECT id FROM games WHERE ID = (SELECT MAX(id) FROM games)"
         self.id = int(*[str(*i) for i in self.cursor.execute(sql_request)]) + 1
-        if self.line_author:
+        if self.line_author.text():
             self.author = self.line_author.text()
-        sql_request = f"SELECT DISTINCT genres.id FROM games LEFT JOIN genres ON " \
-                      f"genres.id = games.genre_id WHERE genres.title = " \
+        sql_request = f"SELECT id FROM genres WHERE title = " \
                       f"'{self.genres_box.currentText()}'"
         self.genre_id = str(*([str(*i) for i in self.cursor.execute(sql_request)]))
-        self.game_name = self.line_name.text()
-        self.year = self.line_year.text()
-        self.description = self.description_plain.toPlainText()
+        if self.line_name.text():
+            self.game_name = self.line_name.text()
+        if self.line_year.text():
+            self.year = self.line_year.text()
+        if self.description_plain.toPlainText():
+            self.description = self.description_plain.toPlainText()
 
     # Функция, проверяющая введённые данные
     def check(self):
@@ -321,14 +328,161 @@ class GameAddWidget(QWidget):
 
 
 class GameEditWidget(QWidget):
-    def __init__(self):
+    def __init__(self, game_id):
         super().__init__()
+        self.checked = False
+        self.game_name = None
+        self.author = None
+        self.genre_id = None
+        self.year = None
+        self.description = None
+        self.image_link = None
+        self.id = game_id
+        # Первое подключение к БД
+        self.connection = sqlite3.connect("./data/games.db")
+        self.cursor = self.connection.cursor()
+        # Подключение дизайна
         uic.loadUi('./data/designs/edit_game.ui', self)
         self.initUI()
 
-    def initUI(self):  # Функция инициализации работы окна изменения игры
+    def initUI(self):  # Функция инициализации работы окна просмотра информации
         # Указываем заголовок окна
         self.setWindowTitle('Редактирование информации')
+        # Получаем и устанавливаем информацию об игре
+        self.fill_genres_box()
+        self.get_data()
+        self.set_data()
+        # Обработка нажатий на кнопки
+        self.edit_btn.clicked.connect(self.update_game)
+        self.edit_image_btn.clicked.connect(self.load_image)
+
+    # Функция, отвечающая за взятие данных из БД
+    def get_data(self):
+        sql_request = f"SELECT game_name FROM games WHERE id = {self.id}"
+        self.game_name = str(*([str(*i) for i in self.cursor.execute(sql_request)]))
+        sql_request = f"SELECT author FROM games WHERE id = {self.id}"
+        self.author = str(*([str(*i) for i in self.cursor.execute(sql_request)]))
+        sql_request = f"SELECT genre_id FROM games WHERE id = {self.id}"
+        self.genre_id = str(*([str(*i) for i in self.cursor.execute(sql_request)]))
+        sql_request = f"SELECT year FROM games WHERE id = {self.id}"
+        self.year = str(*([str(*i) for i in self.cursor.execute(sql_request)]))
+        sql_request = f"SELECT game_description FROM games WHERE id = {self.id}"
+        self.description = str(*([str(*i) for i in self.cursor.execute(sql_request)]))
+        sql_request = f"SELECT image_link FROM games WHERE id = {self.id}"
+        self.image_link = str(*([str(*i) for i in self.cursor.execute(sql_request)]))
+
+    # Получаем изменённую информацию
+    def get_window_data(self):
+        if self.line_author.text():
+            self.author = self.line_author.text()
+        sql_request = f"SELECT id FROM genres WHERE title = " \
+                      f"'{self.genres_box.currentText()}'"
+        self.genre_id = str(*([str(*i) for i in self.cursor.execute(sql_request)]))
+        if self.line_name.text():
+            self.game_name = self.line_name.text()
+        if self.line_year.text():
+            self.year = self.line_year.text()
+        if self.description_plain.toPlainText():
+            self.description = self.description_plain.toPlainText()
+
+    # Наполняем выпадающий список жанров
+    def fill_genres_box(self):
+        # Получаем все жанры
+        data = [str(*i) for i in self.cursor.execute("SELECT title FROM genres")]
+        # Добаляем жанры в выпадающий список жанров
+        for i in range(len(data)):
+            self.genres_box.addItem(data[i])
+
+    # Устанавливаем изображение на image_label
+    def set_image(self):
+        image = QPixmap(self.image_link).scaled(QSize(*DEFAULT_IMAGE_SIZE))
+        self.image_label.setAlignment(Qt.AlignCenter)
+        self.image_label.setPixmap(image)
+
+    # Устанавливаем данные на соответствующие места
+    def set_data(self):
+        self.line_name.setText(self.game_name)
+        self.line_author.setText(self.author)
+        self.line_year.setText(self.year)
+        self.genres_box.setCurrentIndex(int(self.genre_id) - 1)
+        self.description_plain.setPlainText(self.description)
+        self.check_image.setCheckState(1)
+        self.set_image()
+
+    # Загружаем изображение
+    def load_image(self):
+        self.check()
+        if self.checked:
+            self.image_link = QFileDialog.getOpenFileName(self, 'Выбрать картинку', '',
+                                                          'Картинка (*.jpg)')[0]
+            if self.image_link:
+                self.check_image.setCheckState(1)
+            else:
+                self.check_image.setCheckState(0)
+            self.set_image()
+            self.copy_image_to_project()
+
+    # Функция, копирующая изображение в папку проекта
+    def copy_image_to_project(self):
+        files = [file for file in listdir(IMAGES_PATH) if isfile(join(IMAGES_PATH, file))]
+        self.image_link = str(self.game_name) + "." + self.image_link.split(".")[-1]
+        # Проверка на наличие такого же файла в папке
+        if self.image_link.lower() in files:
+            splitted_link = self.image_link.split(".")
+            self.image_link = splitted_link[0] + \
+                              f"-{datetime.day}-{datetime.month}-{datetime.year}-" \
+                              f"{datetime.hour}-{datetime.minute}-{datetime.second}" \
+                              + f".{splitted_link[1]}"
+        self.image_link = f"./data/images/{self.image_link}".lower()
+        self.image_label.pixmap().save(self.image_link)
+
+    # Функция, проверяющая введённые данные
+    def check(self):
+        self.get_window_data()
+        if not self.game_name:
+            QMessageBox.critical(self, "Ошибка ", "Введите название игры",
+                                 QMessageBox.Ok)
+            self.checked = False
+        elif not self.author:
+            QMessageBox.critical(self, "Ошибка ", "Введите автора игры", QMessageBox.Ok)
+            self.checked = False
+        elif not self.year:
+            QMessageBox.critical(self, "Ошибка ", "Введите год создания игры",
+                                 QMessageBox.Ok)
+            self.checked = False
+        elif int(self.year) > datetime.year or int(self.year) < 1952:
+            QMessageBox.critical(self, "Ошибка ", f"Игры не могли быть созданы в "
+                                                  f"{self.year} году",
+                                 QMessageBox.Ok)
+            self.checked = False
+        else:
+            self.checked = True
+
+    # Обновляем игру в БД
+    def update_game(self):
+        self.check()
+        if self.checked:
+            sql_requests = [f"UPDATE games SET game_name = '{self.game_name}' "
+                            f"WHERE id = {self.id}",
+                            f"UPDATE games SET author = '{self.author}' "
+                            f"WHERE id = {self.id}",
+                            f"UPDATE games SET genre_id = {int(self.genre_id)} "
+                            f"WHERE id = {self.id}",
+                            f"UPDATE games SET year = {self.year} "
+                            f"WHERE id = {self.id}",
+                            f"UPDATE games SET game_description = '{self.description}' "
+                            f"WHERE id = {self.id}",
+                            f"UPDATE games SET image_link = '{self.image_link}' "
+                            f"WHERE id = {self.id}"]
+            for sql_request in sql_requests:
+                self.cursor.execute(sql_request)
+            self.connection.commit()
+            self.close()
+
+    # Обновление соединения с БД
+    def update_connection(self):
+        self.connection = sqlite3.connect("./data/games.db")
+        self.cursor = self.connection.cursor()
 
 
 class GameInfoWidget(QWidget):
@@ -351,6 +505,7 @@ class GameInfoWidget(QWidget):
     def initUI(self):  # Функция инициализации работы окна просмотра информации
         # Указываем заголовок окна
         self.setWindowTitle('Информация об игре')
+        # Получаем и устанавливаем информацию об игре
         self.get_data()
         self.set_data()
 
